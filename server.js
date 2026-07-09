@@ -36,7 +36,7 @@ app.post('/api/generate-lesson', async (req, res) => {
         Structure the response beautifully using Markdown. Include: Lesson Objectives, Materials Needed, an engaging Introduction/Hook, a Step-by-Step Lesson Outline, and short Quiz Questions.
     `;
 
-    try {
+  try {
         // Fetch call to Gemini 2.5 Flash
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
             method: 'POST',
@@ -46,19 +46,23 @@ app.post('/api/generate-lesson', async (req, res) => {
             })
         });
 
+        const data = await response.json();
+
         if (!response.ok) {
-            throw new Error(`Gemini API error! Status: ${response.status}`);
+            // This will send Google's exact error message to help us debug
+            console.error('Google Gemini API Error Details:', data);
+            return res.status(response.status).json({ 
+                error: data.error?.message || `Gemini API error! Status: ${response.status}` 
+            });
         }
 
-        const data = await response.json();
         const generatedText = data.candidates[0].content.parts[0].text;
-
-        // Send the AI response back to the frontend
         res.json({ lessonPlan: generatedText });
 
     } catch (error) {
-        console.error('Server Error:', error);
-        res.status(500).json({ error: 'Failed to generate lesson plan due to a server error.' });
+        console.error('Server Network Error:', error);
+        // This will send the exact technical system error to your frontend instead of a blind message
+        res.status(500).json({ error: `Server internal breakdown: ${error.message}` });
     }
 });
 
