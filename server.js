@@ -20,11 +20,13 @@ app.post('/api/generate-lesson', async (req, res) => {
         return res.status(400).json({ error: 'All fields are required' });
     }
 
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-        return res.status(500).json({ error: 'API key is missing on the server' });
-    }
+   // Change this line if it's looking for GEMINI_API_KEY
+const apiKey = process.env.GROQ_API_KEY; 
 
+if (!apiKey) {
+    // This is what is triggering your red error badge on Vercel!
+    return res.status(500).json({ error: "API key is missing on the server" }); 
+}
     // Build the AI instruction prompt
     const prompt = `
         You are an expert educator. Create a comprehensive, highly creative, and detailed lesson plan and teaching notes based on these details:
