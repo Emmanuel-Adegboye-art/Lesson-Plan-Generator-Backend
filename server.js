@@ -36,33 +36,41 @@ app.post('/api/generate-lesson', async (req, res) => {
         Structure the response beautifully using Markdown. Include: Lesson Objectives, Materials Needed, an engaging Introduction/Hook, a Step-by-Step Lesson Outline, and short Quiz Questions.
     `;
 
-  try {
-        // Fetch call to Gemini 2.5 Flash
-       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`, {
+try {
+        // Blazing-fast API call to Groq Cloud using an optimized flagship open model
+        const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${process.env.GROQ_API_KEY}`
+            },
             body: JSON.stringify({
-                contents: [{ parts: [{ text: prompt }] }]
+                model: 'openai/gpt-oss-20b', // Fast, highly efficient flagship model
+                messages: [
+                    {
+                        role: 'user',
+                        content: prompt
+                    }
+                ]
             })
         });
 
         const data = await response.json();
 
         if (!response.ok) {
-            // This will send Google's exact error message to help us debug
-            console.error('Google Gemini API Error Details:', data);
+            console.error('Groq API Error Details:', data);
             return res.status(response.status).json({ 
-                error: data.error?.message || `Gemini API error! Status: ${response.status}` 
+                error: data.error?.message || `Groq API error status: ${response.status}` 
             });
         }
 
-        const generatedText = data.candidates[0].content.parts[0].text;
+        // Groq parses output using standard chat completions structures
+        const generatedText = data.choices[0].message.content;
         res.json({ lessonPlan: generatedText });
 
     } catch (error) {
         console.error('Server Network Error:', error);
-        // This will send the exact technical system error to your frontend instead of a blind message
-        res.status(500).json({ error: `Server internal breakdown: ${error.message}` });
+        res.status(500).json({ error: `Internal server error: ${error.message}` });
     }
 });
 
